@@ -1,0 +1,10 @@
+services:
+  app:
+    image: developer_tools
+    container_name: developer_tools_app
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/var/www/html
+
+#docker stop developer_tools_app
