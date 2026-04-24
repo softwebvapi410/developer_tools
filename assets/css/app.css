@@ -216,7 +216,7 @@ input,button,select,textarea{font-size:16px!important} /* prevent zoom on iOS */
 @media(max-width:640px){
     .modal-inner{border-radius:18px;max-height:96vh;margin:6px auto 20px}
     .score-ring{width:52px;height:52px;font-size:16px}
-    .page-wrap{margin-top:69px}
+    .page-wrap.top{margin-top:69px}
     .glass-card{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
     .finish-banner{padding:18px 20px}
     #pageBreadcrumb{padding:8px 12px;font-size:11px}
@@ -247,3 +247,157 @@ select{appearance:auto;-webkit-appearance:auto}
 .color-swatch{width:28px;height:28px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1.5px var(--border);cursor:pointer;flex-shrink:0}
 
 html{scroll-behavior:smooth}
+
+/* ══════════════════════════════════════════════════════
+   CODE FORMATTER, NUMBER GENERATOR, COLOUR GENERATOR
+   ══════════════════════════════════════════════════════ */
+
+/* Monospace DM Mono fallback stack */
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap');
+
+/* ── Shared: editor textarea ── */
+.case-textarea {
+    display: block;
+    width: 100%;
+    padding: 14px 16px;
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    background: #fff;
+    color: var(--ink);
+    font-family: 'DM Mono', 'Fira Mono', 'Consolas', monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    resize: vertical;
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+    box-sizing: border-box;
+}
+.case-textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(59,91,219,.10);
+}
+.case-textarea[readonly] {
+    background: var(--surface);
+    cursor: default;
+    color: var(--ink);
+}
+
+/* ── Shared: stat pill ── */
+.case-stat {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 8px;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    white-space: nowrap;
+}
+
+/* ── Code formatter: responsive grid ── */
+@media (max-width: 640px) {
+    #cfGrid, #ngGrid, #cgGrid { grid-template-columns: 1fr !important; }
+}
+
+/* ── Colour generator: canvas cursor animation ── */
+#cgCursor { transition: left .08s, top .08s; }
+
+/* ── Colour generator: alpha slider track ── */
+input[type="range"]#cgAlphaSlider {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 12px;
+    border-radius: 6px;
+    outline: none;
+    cursor: pointer;
+}
+input[type="range"]#cgAlphaSlider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2.5px solid rgba(0,0,0,.25);
+    box-shadow: 0 1px 4px rgba(0,0,0,.2);
+    cursor: pointer;
+}
+
+/* ── Hue slider track ── */
+input[type="range"]#cgHueSlider {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 12px;
+    border-radius: 6px;
+    outline: none;
+    cursor: pointer;
+}
+input[type="range"]#cgHueSlider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2.5px solid rgba(0,0,0,.25);
+    box-shadow: 0 1px 4px rgba(0,0,0,.2);
+    cursor: pointer;
+}
+
+/* ── Number generator stats bar ── */
+#ngStats { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+
+/* ── Colour palette swatches hover effect ── */
+#cgTints > div, #cgShades > div, #cgComplementary > div,
+#cgAnalogous > div, #cgTriadic > div {
+    position: relative;
+}
+#cgTints > div::after, #cgShades > div::after,
+#cgComplementary > div::after, #cgAnalogous > div::after,
+#cgTriadic > div::after {
+    content: attr(title);
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,.85);
+    color: #fff;
+    font-size: 9px;
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+    padding: 3px 6px;
+    border-radius: 5px;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity .15s;
+    z-index: 10;
+}
+#cgTints > div:hover::after, #cgShades > div:hover::after,
+#cgComplementary > div:hover::after, #cgAnalogous > div:hover::after,
+#cgTriadic > div:hover::after { opacity: 1; }
+
+/* ── CSS export block ── */
+#cgCssExport {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    line-height: 1.8;
+    white-space: pre-wrap;
+    word-break: break-all;
+    color: var(--ink);
+}
+
+/* ── Input: focus highlight for colour inputs ── */
+#cgR:focus { border-color: #ef4444 !important; box-shadow: 0 0 0 3px rgba(239,68,68,.12); }
+#cgG:focus { border-color: #16a34a !important; box-shadow: 0 0 0 3px rgba(22,163,74,.12); }
+#cgB:focus { border-color: #2563eb !important; box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
+
+/* ── Error bar ── */
+#cfError {
+    background: #fef2f2;
+    border: 1.5px solid #fecaca;
+    border-radius: 12px;
+    padding: 10px 14px;
+}

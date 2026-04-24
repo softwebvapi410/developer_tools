@@ -13,7 +13,7 @@ if (isset($_GET['action'])) {
 
 // --- Determine which page to show ---
 $page = $_GET['page'] ?? 'audit';
-$validPages = ['audit', 'dns', 'mx', 'whois', 'browser', 'ip', 'caseconvert', 'qr'];
+$validPages = ['audit', 'dns', 'mx', 'whois', 'browser', 'ip', 'caseconvert', 'qr', 'codeformat', 'numgen', 'colorgen'];
 if (!in_array($page, $validPages)) {
     $page = 'audit';
 }
@@ -32,6 +32,9 @@ if (!in_array($page, $validPages)) {
     <?php require __DIR__ . '/pages/ip.php'; ?>
     <?php require __DIR__ . '/pages/caseconvert.php'; ?>
     <?php require __DIR__ . '/pages/qr.php'; ?>
+    <?php require __DIR__ . '/pages/codeformat.php'; ?>
+    <?php require __DIR__ . '/pages/numgen.php'; ?>
+    <?php require __DIR__ . '/pages/colorgen.php'; ?>
 
     <?php require __DIR__ . '/components/google-toolbox.php'; ?>
 
@@ -52,6 +55,9 @@ if (!in_array($page, $validPages)) {
 <script src="assets/js/ip.js"></script>
 <script src="assets/js/caseconvert.js"></script>
 <script src="assets/js/qr.js"></script>
+<script src="assets/js/codeformat.js"></script>
+<script src="assets/js/numgen.js"></script>
+<script src="assets/js/colorgen.js"></script>
 
 </body>
 </html>

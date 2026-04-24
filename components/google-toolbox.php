@@ -1,4 +1,6 @@
-<div class="mt-8 mb-2 p-5 glass-card" style="border:1.5px solid #dbeafe;">
+<?php /* Google Toolbox Banner */ ?>
+
+    <div class="mt-8 mb-2 p-5 glass-card" style="border:1.5px solid #dbeafe;">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div class="flex items-start gap-3">
                 <div style="width:36px;height:36px;background:#fff;border-radius:10px;display:flex;align-items:center;justify-content:center;border:1.5px solid #dbeafe;flex-shrink:0;">
@@ -37,3 +39,4 @@
             <?php endforeach; ?>
         </div>
     </div>
+

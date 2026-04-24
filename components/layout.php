@@ -70,6 +70,15 @@
         <a class="sp-item" href="?page=qr" data-page="qr" onclick="return navigateTo('qr')">
             <i data-lucide="qr-code"></i> QR Code Generator
         </a>
+        <a class="sp-item" href="?page=codeformat" data-page="codeformat" onclick="return navigateTo('codeformat')">
+            <i data-lucide="code-2"></i> Code Formatter
+        </a>
+        <a class="sp-item" href="?page=numgen" data-page="numgen" onclick="return navigateTo('numgen')">
+            <i data-lucide="hash"></i> Number Generator
+        </a>
+        <a class="sp-item" href="?page=colorgen" data-page="colorgen" onclick="return navigateTo('colorgen')">
+            <i data-lucide="palette"></i> Colour Generator
+        </a>
         <div class="sp-divider"></div>
         <div class="sp-label">Reference</div>
         <a class="sp-item" href="https://toolbox.googleapps.com/apps/main/" target="_blank" rel="noopener">
@@ -78,7 +87,7 @@
     </div>
 </nav>
 
-<div class="page-wrap max-w-6xl mx-auto" style="padding:var(--sp-4) clamp(14px,4vw,24px) var(--sp-5)">
+<div class="page-wrap top max-w-6xl mx-auto" style="padding:var(--sp-4) clamp(14px,4vw,24px) var(--sp-5)">
 
     <!-- BREADCRUMB BAR -->
     <div id="pageBreadcrumb">
@@ -89,3 +98,4 @@
     </div>
 
 <div class="page-wrap max-w-6xl mx-auto">
+

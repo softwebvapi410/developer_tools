@@ -13,6 +13,9 @@ const PAGE_META = {
     ip:          { label: 'IP Address Info',       icon: 'wifi' },
     caseconvert: { label: 'Text Case Converter',   icon: 'case-sensitive' },
     qr:          { label: 'QR Code Generator',     icon: 'qr-code' },
+    codeformat:  { label: 'Code Formatter',          icon: 'code-2' },
+    numgen:      { label: 'Number Generator',        icon: 'hash' },
+    colorgen:    { label: 'Colour Generator',        icon: 'palette' },
 };
 
 let currentPage = 'audit';
@@ -99,6 +102,9 @@ function navigateTo(page, pushState = true) {
     if (page === 'ip') {
         loadIpInfo();
     }
+    if (page === 'colorgen') {
+        setTimeout(() => { cgDrawCanvas(); cgSyncAll(); }, 50);
+    }
     // Always sync domain across all inputs when navigating
     const _domainInputIds = ['targetUrl','dnsInput','mxInput','whoisInput'];
     const currentDomain = (() => {
@@ -164,6 +170,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Init QR & Case converter defaults
     qrSetType('url');
     qrSetSecurity('WPA');
+    // Init colour generator
+    if (typeof cgInit === 'function') cgInit();
     refreshIcons();
 });
 
