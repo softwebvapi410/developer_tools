@@ -1,5 +1,6 @@
 services:
   app:
+    build: .
     image: developer_tools
     container_name: developer_tools_app
     ports:
