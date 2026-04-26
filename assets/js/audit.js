@@ -163,7 +163,7 @@ function buildResultCard(data) {
                 <div class="meta-row"><span class="meta-key">Filename</span><span class="meta-val" style="word-break:break-all;">${escapeHtml(seo.title)}</span></div>
                 <div class="meta-row"><span class="meta-key">File Size</span><span class="meta-val">${escapeHtml(String(seo.doc_size ?? seo.page_size_kb))}</span></div>
                 <div class="meta-row"><span class="meta-key">HTTP Status</span><span class="meta-val"><span class="tag ${seo.status < 400 ? 'tag-good' : 'tag-issue'}">${seo.status}</span></span></div>
-                <div class="meta-row"><span class="meta-key">SSL / HTTPS</span><span class="meta-val" style="color:${seo.ssl_valid ? 'var(--success)' : 'var(--danger)'};">${seo.ssl_valid ? 'Secure' : 'Insecure'} (${seo.scheme.toUpperCase()})</span></div>
+                <div class="meta-row"><span class="meta-key">SSL / HTTPS</span><span class="meta-val" style="color:${seo.ssl_valid ? 'var(--success)' : 'var(--danger)'};">${seo.ssl_valid ? 'Secure' : 'Not Secure'}</span></div>
                 <div class="meta-row"><span class="meta-key">Priority</span><span class="meta-val">${data.priority.toFixed(2)}</span></div>
             </div>
         </div>
@@ -183,7 +183,7 @@ function buildResultCard(data) {
                 <div class="meta-row"><span class="meta-key">Images (missing alt)</span><span class="meta-val">${seo.total_images} (${seo.img_no_alt})</span></div>
                 <div class="meta-row"><span class="meta-key">Load Time</span><span class="meta-val">${seo.load_time}s</span></div>
                 <div class="meta-row"><span class="meta-key">Page Size</span><span class="meta-val">${seo.page_size_kb} KB</span></div>
-                <div class="meta-row"><span class="meta-key">SSL / HTTPS</span><span class="meta-val" style="color:${seo.ssl_valid ? 'var(--success)' : 'var(--danger)'};">${seo.ssl_valid ? 'Secure' : 'Insecure'} (${seo.scheme.toUpperCase()})</span></div>
+                <div class="meta-row"><span class="meta-key">SSL / HTTPS</span><span class="meta-val" style="color:${seo.ssl_valid ? 'var(--success)' : 'var(--danger)'};">${seo.ssl_valid ? 'Secure' : 'Not Secure'}</span></div>
                 <div class="meta-row"><span class="meta-key">Priority</span><span class="meta-val">${data.priority.toFixed(2)}</span></div>
             </div>
         </div>
@@ -504,7 +504,7 @@ function showFullReport(cardId) {
                         </div>
                         <div>
                             <div class="font-semibold text-sm">${seo.ssl_valid?'SSL Certificate Valid':'SSL Certificate Missing'}</div>
-                            <p class="text-xs mt-0.5" style="color:var(--muted);">${seo.ssl_valid?'Site served over HTTPS':'Site served over HTTP (insecure)'}</p>
+                            <p class="text-xs mt-0.5" style="color:var(--muted);">${seo.ssl_valid?'Site served over HTTPS':'HTTPS required for SEO & trust signals'}</p>
                         </div>
                     </div>
                 </div>
