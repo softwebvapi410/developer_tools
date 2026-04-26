@@ -122,21 +122,99 @@ function replaceSkeletonWithCard(data) {
     refreshIcons();
 }
 
+// ═══════════════════════════════════════════════════════════════
+//  PATCH: Replace buildResultCard in audit.js
+//  This version handles document files (PDF, XLSX, DOCX, etc.)
+//  showing extension badges and suppressing N/A SEO scores.
+// ═══════════════════════════════════════════════════════════════
+
 function buildResultCard(data) {
-    const id = 'r' + Math.random().toString(36).substr(2,9);
+    const id = 'r' + Math.random().toString(36).substr(2, 9);
     const sc = data.seo.score;
-    const scColor = sc>=80?'var(--success)':(sc>=50?'var(--warning)':'var(--danger)');
+    const seo = data.seo;
+    const isDoc = !!seo.is_document;
+
+    // ── Score display ──
+    // Documents always show N/A instead of 100%
+    const scColor = isDoc
+        ? 'var(--muted)'
+        : (sc >= 80 ? 'var(--success)' : sc >= 50 ? 'var(--warning)' : 'var(--danger)');
+    const scLabel = isDoc ? 'N/A' : sc + '%';
+
     const dotClass = getPriorityDot(data.priority);
-    const sslTag = data.seo.ssl_valid
+
+    const sslTag = seo.ssl_valid
         ? `<span class="tag tag-good" style="font-size:10px;">Secure</span>`
         : `<span class="tag tag-issue" style="font-size:10px;">Insecure</span>`;
+
+    // ── Document extension badge ──
+    const docBadge = isDoc
+        ? `<span class="tag" style="background:${escapeHtml(seo.doc_bg)};color:${escapeHtml(seo.doc_color)};font-size:10px;font-weight:800;letter-spacing:.06em;display:inline-flex;align-items:center;gap:4px;">
+               <i data-lucide="${escapeHtml(seo.doc_icon)}" class="icon-sm"></i> ${escapeHtml(seo.doc_ext)}
+           </span>`
+        : '';
+
+    // ── Document detail rows (replaces SEO technical summary) ──
+    const detailsInner = isDoc ? `
+        <div>
+            <p class="text-xs font-bold uppercase tracking-widest mb-3" style="color:var(--muted);">File Details</p>
+            <div>
+                <div class="meta-row"><span class="meta-key">File Type</span><span class="meta-val">${escapeHtml(seo.doc_label)} (${escapeHtml(seo.doc_ext)})</span></div>
+                <div class="meta-row"><span class="meta-key">Filename</span><span class="meta-val" style="word-break:break-all;">${escapeHtml(seo.title)}</span></div>
+                <div class="meta-row"><span class="meta-key">File Size</span><span class="meta-val">${escapeHtml(String(seo.doc_size ?? seo.page_size_kb))}</span></div>
+                <div class="meta-row"><span class="meta-key">HTTP Status</span><span class="meta-val"><span class="tag ${seo.status < 400 ? 'tag-good' : 'tag-issue'}">${seo.status}</span></span></div>
+                <div class="meta-row"><span class="meta-key">SSL / HTTPS</span><span class="meta-val" style="color:${seo.ssl_valid ? 'var(--success)' : 'var(--danger)'};">${seo.ssl_valid ? 'Secure' : 'Not Secure'}</span></div>
+                <div class="meta-row"><span class="meta-key">Priority</span><span class="meta-val">${data.priority.toFixed(2)}</span></div>
+            </div>
+        </div>
+        <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:16px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;">
+            <i data-lucide="${escapeHtml(seo.doc_icon)}" class="icon-lg"></i>
+            <span class="tag" style="background:${escapeHtml(seo.doc_bg)};color:${escapeHtml(seo.doc_color)};font-size:13px;font-weight:800;">${escapeHtml(seo.doc_ext)} File</span>
+            <p class="text-xs" style="color:var(--muted);text-align:center;">SEO scoring does not apply to document files.</p>
+            <a href="${escapeHtml(data.url)}" target="_blank" rel="noopener"
+               style="display:inline-flex;align-items:center;gap:5px;background:${escapeHtml(seo.doc_color)};color:#fff;font-size:11px;font-weight:700;padding:5px 12px;border-radius:8px;text-decoration:none;margin-top:4px;">
+                <i data-lucide="download" class="icon-sm"></i> Open / Download
+            </a>
+        </div>` : `
+        <div>
+            <p class="text-xs font-bold uppercase tracking-widest mb-3" style="color:var(--muted);">Technical Summary</p>
+            <div>
+                <div class="meta-row"><span class="meta-key">H1 / H2 / H3</span><span class="meta-val">${seo.h1_count} / ${seo.h2_count} / ${seo.h3_count}</span></div>
+                <div class="meta-row"><span class="meta-key">Images (missing alt)</span><span class="meta-val">${seo.total_images} (${seo.img_no_alt})</span></div>
+                <div class="meta-row"><span class="meta-key">Load Time</span><span class="meta-val">${seo.load_time}s</span></div>
+                <div class="meta-row"><span class="meta-key">Page Size</span><span class="meta-val">${seo.page_size_kb} KB</span></div>
+                <div class="meta-row"><span class="meta-key">SSL / HTTPS</span><span class="meta-val" style="color:${seo.ssl_valid ? 'var(--success)' : 'var(--danger)'};">${seo.ssl_valid ? 'Secure' : 'Not Secure'}</span></div>
+                <div class="meta-row"><span class="meta-key">Priority</span><span class="meta-val">${data.priority.toFixed(2)}</span></div>
+            </div>
+        </div>
+        <div style="background:var(--danger-bg);border:1px solid #fecaca;border-radius:14px;padding:16px;">
+            <div class="flex items-center gap-2 mb-2">
+                <i data-lucide="alert-circle" class="icon-sm" style="color:var(--danger);flex-shrink:0;"></i>
+                <p class="text-xs font-bold uppercase tracking-widest" style="color:var(--danger);">Critical Issues</p>
+            </div>
+            ${seo.issues.length > 0
+                ? `<ul style="list-style:disc inside;">${seo.issues.slice(0, 3).map(i => `<li class="text-xs" style="color:#991b1b;margin-bottom:4px;">${escapeHtml(i)}</li>`).join('')}</ul>${seo.issues.length > 3 ? `<p class="text-xs mt-2" style="color:var(--danger);">+${seo.issues.length - 3} more</p>` : ''}`
+                : `<p class="text-xs font-bold text-center py-3 flex items-center justify-center gap-2" style="color:var(--success);"><i data-lucide="check-circle" class="icon-sm"></i> No critical issues!</p>`
+            }
+        </div>`;
+
+    // ── Full Report button — hide for documents (no SEO modal content) ──
+    const fullReportBtn = isDoc
+        ? `<a href="${escapeHtml(data.url)}" target="_blank" rel="noopener" class="btn-secondary" style="padding:8px 14px;font-size:12px!important;display:inline-flex;align-items:center;gap:6px;">
+               <i data-lucide="external-link" class="icon-sm"></i> Open File
+           </a>`
+        : `<button onclick="showFullReport('${id}')" class="btn-primary" style="padding:8px 14px;font-size:12px!important;box-shadow:none;">
+               <i data-lucide="file-search" class="icon-sm"></i> Full Report
+           </button>`;
+
     return `
     <div class="result-card" style="animation:fadeSlide .3s ease;">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div class="flex-1 min-w-0">
                 <div class="flex flex-wrap items-center gap-2 mb-1">
                     <span class="w-2 h-2 rounded-full inline-block flex-shrink-0 ${dotClass}"></span>
-                    <h4 class="heading font-bold text-sm truncate" style="color:var(--ink);">${escapeHtml(data.seo.title)}</h4>
+                    <h4 class="heading font-bold text-sm truncate" style="color:var(--ink);">${escapeHtml(seo.title)}</h4>
+                    ${docBadge}
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
                     <p class="text-xs truncate" style="color:var(--accent);" data-url="${escapeHtml(data.url)}">${escapeHtml(data.url)}</p>
@@ -144,38 +222,16 @@ function buildResultCard(data) {
                 </div>
             </div>
             <div class="flex items-center gap-2 flex-shrink-0">
-                <span class="heading font-extrabold text-lg" style="color:${scColor};">${sc}%</span>
+                <span class="heading font-extrabold text-lg" style="color:${scColor};">${scLabel}</span>
                 <button onclick="toggleDetails('${id}')" class="btn-secondary" style="padding:8px 12px;font-size:12px!important;">
                     <i data-lucide="chevron-down" class="icon-sm"></i> Details
                 </button>
-                <button onclick="showFullReport('${id}')" class="btn-primary" style="padding:8px 14px;font-size:12px!important;box-shadow:none;">
-                    <i data-lucide="file-search" class="icon-sm"></i> Full Report
-                </button>
+                ${fullReportBtn}
             </div>
         </div>
         <div id="${id}" class="details-content mt-4 pt-4" style="border-top:1px solid var(--border);">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <p class="text-xs font-bold uppercase tracking-widest mb-3" style="color:var(--muted);">Technical Summary</p>
-                    <div>
-                        <div class="meta-row"><span class="meta-key">H1 / H2 / H3</span><span class="meta-val">${data.seo.h1_count} / ${data.seo.h2_count} / ${data.seo.h3_count}</span></div>
-                        <div class="meta-row"><span class="meta-key">Images (missing alt)</span><span class="meta-val">${data.seo.total_images} (${data.seo.img_no_alt})</span></div>
-                        <div class="meta-row"><span class="meta-key">Load Time</span><span class="meta-val">${data.seo.load_time}s</span></div>
-                        <div class="meta-row"><span class="meta-key">Page Size</span><span class="meta-val">${data.seo.page_size_kb} KB</span></div>
-                        <div class="meta-row"><span class="meta-key">SSL / HTTPS</span><span class="meta-val" style="color:${data.seo.ssl_valid?'var(--success)':'var(--danger)'};">${data.seo.ssl_valid?'Secure':'Not Secure'}</span></div>
-                        <div class="meta-row"><span class="meta-key">Priority</span><span class="meta-val">${data.priority.toFixed(2)}</span></div>
-                    </div>
-                </div>
-                <div style="background:var(--danger-bg);border:1px solid #fecaca;border-radius:14px;padding:16px;">
-                    <div class="flex items-center gap-2 mb-2">
-                        <i data-lucide="alert-circle" class="icon-sm" style="color:var(--danger);flex-shrink:0;"></i>
-                        <p class="text-xs font-bold uppercase tracking-widest" style="color:var(--danger);">Critical Issues</p>
-                    </div>
-                    ${data.seo.issues.length>0
-                        ? `<ul style="list-style:disc inside;">${data.seo.issues.slice(0,3).map(i=>`<li class="text-xs" style="color:#991b1b;margin-bottom:4px;">${escapeHtml(i)}</li>`).join('')}</ul>${data.seo.issues.length>3?`<p class="text-xs mt-2" style="color:var(--danger);">+${data.seo.issues.length-3} more</p>`:''}`
-                        : `<p class="text-xs font-bold text-center py-3 flex items-center justify-center gap-2" style="color:var(--success);"><i data-lucide="check-circle" class="icon-sm"></i> No critical issues!</p>`
-                    }
-                </div>
+                ${detailsInner}
             </div>
         </div>
     </div>`;
