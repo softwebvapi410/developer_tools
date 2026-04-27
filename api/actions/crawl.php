@@ -85,6 +85,7 @@ if (isset($docExtensions[$urlExt])) {
     $parsedDoc = parse_url($url);
     $filename  = basename($parsedDoc['path'] ?? $url);
     $ssl       = ($parsedDoc['scheme'] ?? '') === 'https';
+    $scheme    = $parsedDoc['scheme'] ?? 'http';
 
     $seo = [
         'title'           => $filename,
@@ -101,10 +102,10 @@ if (isset($docExtensions[$urlExt])) {
         'internal_links' => 0, 'external_links' => 0,
         'broken_links' => [],
         'schema_count' => 0, 'schema_types' => [],
-        'page_size_kb'  => $sizeMb,
-        'status'        => $status,
+        'page_size_kb' => $sizeMb,
+        'status'        => $info['http_code'],
         'load_time'     => '—',
-        'score'         => 100,   // Documents always 100% — N/A for SEO scoring
+        'score'         => 100,
         'issues'        => [],
         'warnings'      => [],
         'suggestions'   => [],
@@ -113,6 +114,8 @@ if (isset($docExtensions[$urlExt])) {
         'twitter_card' => null, 'twitter_title' => null,
         'twitter_description' => null, 'twitter_image' => null,
         'ssl_valid'     => $ssl,
+        'scheme'        => $scheme,
+        'security_status' => $ssl ? 'secure' : 'insecure',
         'mixed_content' => [],
         'keyword_density' => [],
         'robots_txt_valid' => null, 'robots_txt_content' => null,
@@ -129,7 +132,6 @@ if (isset($docExtensions[$urlExt])) {
         'llms_txt_content' => null, 'llms_txt_sections' => [],
         'robots_sitemap_ref' => null, 'robots_sitemap_match' => false,
         'tracking_tools' => [],
-        // Document-specific extras
         'is_document'   => true,
         'doc_ext'       => strtoupper($urlExt),
         'doc_label'     => $docInfo['label'],
@@ -154,31 +156,78 @@ if (isset($docExtensions[$urlExt])) {
     exit;
 }
 
-// ── Standard HTML page crawl ───────────────────────────────────
-$ch = curl_init();
-curl_setopt_array($ch, [
-    CURLOPT_URL            => $url,
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_FOLLOWLOCATION => true,
-    CURLOPT_MAXREDIRS      => 5,
-    CURLOPT_USERAGENT      => 'Mozilla/5.0 (compatible; SEOAuditorPro/2.0; +https://seoauditor.pro)',
-    CURLOPT_SSL_VERIFYPEER => false,
-    CURLOPT_SSL_VERIFYHOST => 0,
-    CURLOPT_TIMEOUT        => 15,
-    CURLOPT_HEADER         => true,
-    CURLOPT_ENCODING       => 'gzip, deflate',
-]);
-$response    = curl_exec($ch);
-$info        = curl_getinfo($ch);
-$curlerror   = curl_error($ch);
-curl_close($ch);
+// ── Robust fetch with HTTPS/HTTP fallback ──────────────────────
+function fetchUrlRobust(string $fetchUrl): array {
+    $ch = curl_init();
+    curl_setopt_array($ch, [
+        CURLOPT_URL            => $fetchUrl,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_MAXREDIRS      => 5,
+        CURLOPT_USERAGENT      => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
+        CURLOPT_SSL_VERIFYPEER => false,
+        CURLOPT_SSL_VERIFYHOST => 0,
+        CURLOPT_TIMEOUT        => 20,
+        CURLOPT_CONNECTTIMEOUT => 10,
+        CURLOPT_HEADER         => true,
+        CURLOPT_ENCODING       => 'gzip, deflate, br',
+        CURLOPT_HTTPHEADER     => [
+            'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept-Language: en-US,en;q=0.5',
+            'Upgrade-Insecure-Requests: 1',
+            'Cache-Control: no-cache',
+        ],
+    ]);
 
-if ($response === false || !empty($curlerror)) {
-    echo json_encode(['error' => 'Failed to fetch URL: ' . ($curlerror ?: 'Unknown error')]); exit;
+    $response    = curl_exec($ch);
+    $curlError   = curl_error($ch);
+    $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+    $info        = curl_getinfo($ch);
+    curl_close($ch);
+
+    $html = ($response !== false && strlen($response) > $header_size)
+        ? substr($response, $header_size)
+        : '';
+
+    return [$html, $info, $curlError];
 }
 
-$header_size = $info['header_size'] ?? 0;
-$html        = $header_size > 0 ? substr($response, $header_size) : $response;
+// Try the URL as provided first, then try the alternative scheme if it fails
+[$html, $info, $curlError] = fetchUrlRobust($url);
+$originalUrl = $url;
+$fallbackUsed = false;
+
+if (!$html || $info['http_code'] === 0) {
+    // Try the alternative scheme
+    if (stripos($url, 'https://') === 0) {
+        $altUrl = 'http://' . substr($url, 8);
+        [$html2, $info2, $curlError2] = fetchUrlRobust($altUrl);
+        if ($html2 && $info2['http_code'] > 0 && $info2['http_code'] < 400) {
+            $html = $html2;
+            $info = $info2;
+            $curlError = '';
+            $url = $altUrl;
+            $fallbackUsed = true;
+        }
+    } elseif (stripos($url, 'http://') === 0) {
+        $altUrl = 'https://' . substr($url, 7);
+        [$html2, $info2, $curlError2] = fetchUrlRobust($altUrl);
+        if ($html2 && $info2['http_code'] > 0 && $info2['http_code'] < 400) {
+            $html = $html2;
+            $info = $info2;
+            $curlError = '';
+            $url = $altUrl;
+            $fallbackUsed = true;
+        }
+    }
+}
+
+// Still no content? Return error
+if (!$html && $info['http_code'] === 0) {
+    $msg = $curlError ?: 'Could not connect to the server. The site may be offline, blocking crawlers, or the domain does not exist.';
+    echo json_encode(['error' => $msg, 'url' => $originalUrl, 'status' => 0]);
+    exit;
+}
 
 // If the server returned a document content-type despite no extension, handle it
 $contentType = $info['content_type'] ?? '';
@@ -200,6 +249,7 @@ if ($isDocument && $docExtFromCT) {
     $parsedDoc = parse_url($url);
     $filename  = basename($parsedDoc['path'] ?? $url) ?: $url;
     $ssl       = ($parsedDoc['scheme'] ?? '') === 'https';
+    $scheme    = $parsedDoc['scheme'] ?? 'http';
 
     $seo = [
         'title'           => $filename,
@@ -222,7 +272,10 @@ if ($isDocument && $docExtFromCT) {
         'og_url' => null, 'og_type' => null,
         'twitter_card' => null, 'twitter_title' => null,
         'twitter_description' => null, 'twitter_image' => null,
-        'ssl_valid' => $ssl, 'mixed_content' => [],
+        'ssl_valid' => $ssl,
+        'scheme' => $scheme,
+        'security_status' => $ssl ? 'secure' : 'insecure',
+        'mixed_content' => [],
         'keyword_density' => [], 'robots_txt_valid' => null, 'robots_txt_content' => null,
         'serp_preview' => '', 'local_business_schema' => false,
         'nap_consistency' => [], 'maps_presence' => false,
@@ -330,6 +383,13 @@ $seo = [
 
 $links = $internalLinks = $externalLinks = $brokenLinks = [];
 
+// Flag scheme fallback
+if ($fallbackUsed) {
+    $scheme = stripos($url, 'https://') === 0 ? 'HTTPS' : 'HTTP';
+    $seo['issues'][] = "Site does not support the requested scheme — crawled over $scheme. Consider enabling both HTTP and HTTPS for better compatibility.";
+    $seo['score'] -= 10;
+}
+
 if ($html && strpos($contentType, 'text/html') !== false) {
     $dom = new DOMDocument();
     @$dom->loadHTML(mb_convert_encoding($html, 'HTML-ENTITIES', 'UTF-8'), LIBXML_NOERROR);
@@ -349,10 +409,12 @@ if ($html && strpos($contentType, 'text/html') !== false) {
     $seo['word_count'] = str_word_count($textContent);
 
     // ===== SSL =====
-    if (isset($parsedUrl['scheme']) && $parsedUrl['scheme'] === 'https') {
-        $seo['ssl_valid'] = true;
-    } else {
-        $seo['ssl_valid'] = false;
+    $scheme = $parsedUrl['scheme'] ?? 'http';
+    $seo['scheme'] = $scheme;
+    $seo['ssl_valid'] = ($scheme === 'https');
+    $seo['security_status'] = $seo['ssl_valid'] ? 'secure' : 'insecure';
+
+    if (!$seo['ssl_valid']) {
         $seo['warnings'][] = "Site is using HTTP — consider enabling HTTPS for production sites.";
     }
 
