@@ -1,5 +1,7 @@
 FROM php:8.2-apache
 
+RUN apt-get update && apt-get install -y libzip-dev zip && docker-php-ext-install zip
+
 # Install system dependencies + common PHP extensions
 RUN docker-php-ext-enable opcache \
     && a2enmod rewrite
