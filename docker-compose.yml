@@ -8,4 +8,5 @@ services:
     volumes:
       - .:/var/www/html
 
+    restart: unless-stopped
 #docker stop developer_tools_app
