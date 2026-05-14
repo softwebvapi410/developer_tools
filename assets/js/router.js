@@ -11,6 +11,7 @@ const PAGE_META = {
     whois:       { label: 'WHOIS Lookup',          icon: 'id-card' },
     browser:     { label: 'Browser & UA',          icon: 'monitor' },
     ip:          { label: 'IP Address Info',       icon: 'wifi' },
+    downloader:  { label: 'Website Downloader',    icon: 'download' },
     caseconvert: { label: 'Text Case Converter',   icon: 'case-sensitive' },
     qr:          { label: 'QR Code Generator',     icon: 'qr-code' },
     codeformat:  { label: 'Code Formatter',          icon: 'code-2' },

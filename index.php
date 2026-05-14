@@ -13,16 +13,16 @@ if (isset($_GET['action'])) {
 
 // --- Determine which page to show ---
 $page = $_GET['page'] ?? 'audit';
-$validPages = ['audit', 'dns', 'mx', 'whois', 'browser', 'ip', 'caseconvert', 'qr', 'codeformat', 'numgen', 'colorgen'];
+$validPages = ['audit', 'dns', 'mx', 'whois', 'browser', 'ip', 'downloader', 'caseconvert', 'qr', 'codeformat', 'numgen', 'colorgen'];
 if (!in_array($page, $validPages)) {
     $page = 'audit';
 }
 ?>
 <?php require __DIR__ . '/components/layout.php'; ?>
 
-    <!-- ════════════════════════════════════════════════════
+    <!-- ═══════════════════════════════════════════════════════════════════
          PAGE SECTIONS  (all rendered; JS shows/hides them)
-         ════════════════════════════════════════════════════ -->
+         ═══════════════════════════════════════════════════════════════════ -->
 
     <?php require __DIR__ . '/pages/audit.php'; ?>
     <?php require __DIR__ . '/pages/dns.php'; ?>
@@ -30,6 +30,7 @@ if (!in_array($page, $validPages)) {
     <?php require __DIR__ . '/pages/whois.php'; ?>
     <?php require __DIR__ . '/pages/browser.php'; ?>
     <?php require __DIR__ . '/pages/ip.php'; ?>
+    <?php require __DIR__ . '/pages/downloader.php'; ?>
     <?php require __DIR__ . '/pages/caseconvert.php'; ?>
     <?php require __DIR__ . '/pages/qr.php'; ?>
     <?php require __DIR__ . '/pages/codeformat.php'; ?>

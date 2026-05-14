@@ -64,6 +64,9 @@
         </a>
         <div class="sp-divider"></div>
         <div class="sp-label">Tools</div>
+        <a class="sp-item" href="?page=downloader" data-page="downloader" onclick="return navigateTo('downloader')">
+            <i data-lucide="download"></i> Website Downloader
+        </a>
         <a class="sp-item" href="?page=caseconvert" data-page="caseconvert" onclick="return navigateTo('caseconvert')">
             <i data-lucide="case-sensitive"></i> Text Case Converter
         </a>
