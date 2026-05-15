@@ -657,29 +657,33 @@ while (!empty($queue) && $round < 12) {
                 $retryMap[$u . '_proxy'] = $proxyAttempt;
 
                 if ($proxyAttempt <= count(dl_proxy_pool())) {
-                    dl_log('warn', "429 for " . basename($u) . " — rotating proxy (attempt {$proxyAttempt})");
+                    $errMsg = $r['err'] ? " ({$r['err']})" : '';
+                    dl_log('warn', "429 for {$u}{$errMsg} — rotating proxy (attempt {$proxyAttempt})");
                     // Re-download immediately via proxy
                     $proxyResult = dl_batch([$u], $outDir, parse_url($u, PHP_URL_HOST) ?? '', $proxyAttempt);
-                    $pr = $proxyResult[$u] ?? ['ok' => false, 'code' => 0, 'size' => 0];
+                    $pr = $proxyResult[$u] ?? ['ok' => false, 'code' => 0, 'size' => 0, 'err' => 'proxy retry failed'];
                     if ($pr['ok']) {
-                        dl_log('cdn', "Proxy OK: " . basename($u) . " (" . dl_fmt_size($pr['size']) . ")");
+                        dl_log('cdn', "Proxy OK: {$u} (" . dl_fmt_size($pr['size']) . ")");
                         $stats['ok']++;
                         $stats['bytes'] += $pr['size'];
                         if ($deepScan && dl_is_deep_scannable($u)) {
                             $deepScanQueue[] = ['url' => $u, 'file' => $pr['dest']];
                         }
                     } else {
-                        dl_log('warn', "Proxy failed too — queuing for CDN fallback: " . basename($u));
+                        $errMsg = $pr['err'] ? " ({$pr['err']})" : '';
+                        dl_log('warn', "Proxy failed too{$errMsg} — queuing for CDN fallback: {$u}");
                         $rateLimited[$u] = $wait;
                     }
                 } else {
-                    dl_log('warn', "All proxies exhausted for " . basename($u) . " — CDN fallback");
+                    $errMsg = $r['err'] ? " ({$r['err']})" : '';
+                    dl_log('warn', "All proxies exhausted for {$u}{$errMsg} — CDN fallback");
                     $rateLimited[$u] = $wait;
                 }
 
             } elseif (($retryMap[$u] ?? 0) < DL_MAX_RETRIES) {
                 $retryMap[$u] = ($retryMap[$u] ?? 0) + 1;
-                dl_log('retry', "Retry {$retryMap[$u]}/" . DL_MAX_RETRIES . " (HTTP {$r['code']}) — " . basename($u));
+                $errMsg = $r['err'] ? " ({$r['err']})" : '';
+                dl_log('retry', "Retry {$retryMap[$u]}/" . DL_MAX_RETRIES . " (HTTP {$r['code']}){$errMsg} — {$u}");
                 $nextQueue[] = $u;
                 $stats['retry']++;
 
@@ -692,9 +696,10 @@ while (!empty($queue) && $round < 12) {
                             $cdnQueue[] = ['original' => $u, 'cdn' => $cdnUrl, 'priority' => $i];
                         }
                     }
-                    dl_log('cdn', "CDN fallback queue for " . basename($u) . " (" . count($fallbacks) . " candidates)");
+                    dl_log('cdn', "CDN fallback queue for {$u} (" . count($fallbacks) . " candidates)");
                 } else {
-                    dl_log('err', "FAILED (HTTP {$r['code']}) — " . basename($u));
+                    $errMsg = $r['err'] ? " ({$r['err']})" : '';
+                    dl_log('err', "FAILED (HTTP {$r['code']}){$errMsg} — {$u}");
                     $stats['fail']++;
                 }
             }
@@ -715,7 +720,8 @@ while (!empty($queue) && $round < 12) {
                         }
                     }
                 } else {
-                    dl_log('err', "FAILED — " . basename($u));
+                    $errMsg = $r['err'] ? " ({$r['err']})" : '';
+                    dl_log('err', "FAILED — {$u}{$errMsg}");
                     $stats['fail']++;
                 }
             }
@@ -759,7 +765,7 @@ while (!empty($queue) && $round < 12) {
                 // Any original that never resolved
                 foreach ($cdnBatch as $item) {
                     if (!isset($foundOk[$item['original']])) {
-                        dl_log('err', "All CDN fallbacks failed — " . basename($item['original']));
+                        dl_log('err', "All CDN fallbacks failed — " . $item['original']);
                         $stats['fail']++;
                     }
                 }
@@ -771,13 +777,16 @@ while (!empty($queue) && $round < 12) {
     $queue = array_unique($nextQueue);
 }
 
-// ── Phase 2: deep scan ─────────────────────────────────────────
+// -- Phase 2: deep scan --
 if ($deepScan && !empty($deepScanQueue)) {
-    dl_log('head', "═ Deep scanning " . count($deepScanQueue) . " files");
+    dl_log('head', 'Deep scanning ' . count($deepScanQueue) . ' files');
     $discovered = [];
 
     foreach ($deepScanQueue as $item) {
-        if (!file_exists($item['file']) || filesize($item['file']) > DL_MAX_DEEP_SIZE) continue;
+        if (!file_exists($item['file']) || filesize($item['file']) > DL_MAX_DEEP_SIZE) {
+            dl_log('warn', "Skipped deep scan (missing/too-large) — {$item['url']}");
+            continue;
+        }
         $newUrls = dl_deep_scan_file($item['file'], $item['url']);
         foreach ($newUrls as $nu) {
             if (!isset($processed[$nu])) {
@@ -823,6 +832,8 @@ if ($deepScan && !empty($deepScanQueue)) {
                         $retryMap[$u] = ($retryMap[$u] ?? 0) + 1;
                         $nextNew[] = $u;
                     } else {
+                        $errMsg = $r['err'] ? " ({$r['err']})" : '';
+                        dl_log('err', "Deep scan failed — {$u} (HTTP {$r['code']}){$errMsg}");
                         $stats['fail']++;
                     }
                 }

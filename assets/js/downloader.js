@@ -161,6 +161,7 @@ function dlStart() {
     }
 
     dlSetLive('connecting');
+    dlEnableUnloadWarning();
 
     // Close any existing stream
     if (_dlStream) { _dlStream.abort(); _dlStream = null; }
@@ -228,6 +229,7 @@ function dlStart() {
                         } else if (event === 'done') {
                             dlHandleDone(parsed, !!zip);
                         } else if (event === 'error') {
+                            dlDisableUnloadWarning();
                             dlLog('err', parsed.msg || 'Unknown error');
                             dlSetLive('error');
                             dlResetBtn();
@@ -235,6 +237,7 @@ function dlStart() {
                     }
                     pump();
                 }).catch(e => {
+                    dlDisableUnloadWarning();
                     if (e.name !== 'AbortError') {
                         dlLog('err', 'Stream error: ' + e.message);
                         dlSetLive('error');
@@ -245,12 +248,28 @@ function dlStart() {
             pump();
         })
         .catch(e => {
+            dlDisableUnloadWarning();
             if (e.name !== 'AbortError') {
                 dlLog('err', 'Request failed: ' + e.message);
                 dlSetLive('error');
             }
             dlResetBtn();
         });
+}
+
+function dlHandleBeforeUnload(event) {
+    const msg = 'Download is in progress. Do not switch tabs or close this page until the download completes.';
+    event.preventDefault();
+    event.returnValue = msg;
+    return msg;
+}
+
+function dlEnableUnloadWarning() {
+    window.addEventListener('beforeunload', dlHandleBeforeUnload);
+}
+
+function dlDisableUnloadWarning() {
+    window.removeEventListener('beforeunload', dlHandleBeforeUnload);
 }
 
 function dlUpdStat(id, val) {
@@ -268,6 +287,7 @@ function dlParseSize(str) {
 }
 
 function dlHandleDone(data, wantZip) {
+    dlDisableUnloadWarning();
     dlSetLive('done');
     dlResetBtn();
 
@@ -283,13 +303,71 @@ function dlHandleDone(data, wantZip) {
         const zipArea = document.getElementById('dlZipArea');
         const zipBtn  = document.getElementById('dlZipBtn');
         const zipLbl  = document.getElementById('dlZipLabel');
+        const zipUrl  = '?action=dl_zip&file=' + encodeURIComponent(data.zip);
         if (zipArea) zipArea.style.display = '';
-        if (zipBtn)  zipBtn.href = '?action=dl_zip&file=' + encodeURIComponent(data.zip);
+        if (zipBtn) {
+            zipBtn.href = zipUrl;
+            zipBtn.onclick = dlInterceptZipDownload;
+        }
         if (zipLbl)  zipLbl.textContent = 'Download ZIP — ' + dlFmtSize(data.zipSize || 0);
         dlStartTimer();
     }
 
     refreshIcons();
+}
+
+function dlShowPopup(message) {
+    const modal = document.getElementById('seoModal');
+    const heading = modal?.querySelector('.modal-header .heading');
+    const urlEl = document.getElementById('modalUrl');
+    const content = document.getElementById('modalContent');
+
+    if (!modal || !content) {
+        dlLog('warn', message);
+        return;
+    }
+
+    if (heading) heading.textContent = 'Download Warning';
+    if (urlEl) urlEl.textContent = 'Please keep this tab active until the download completes.';
+    content.innerHTML = `
+        <div style="display:flex;flex-direction:column;align-items:center;gap:20px;padding:28px 24px;">
+            <div style="width:84px;height:84px;border-radius:50%;background:rgba(245, 158, 11, 0.14);display:flex;align-items:center;justify-content:center;">
+                <i data-lucide="alert-triangle" style="width:36px;height:36px;color:#f59e0b;"></i>
+            </div>
+            <div style="text-align:center;max-width:520px;">
+                <div style="font-size:1.1rem;font-weight:700;color:var(--ink);margin-bottom:10px;">Do Not Leave This Page</div>
+                <div style="color:var(--muted);line-height:1.75;">${message}</div>
+            </div>
+            <div style="width:100%;max-width:520px;border-radius:20px;background:rgba(15, 23, 42, 0.05);padding:18px 20px;text-align:left;color:var(--ink);line-height:1.7;">
+                <strong style="display:block;margin-bottom:8px;">Warning:</strong>
+                Keep this tab open until the download completes. Switching away may interrupt the session or cause the ZIP to expire before it is ready.</div>
+        </div>`;
+    modal.style.display = 'flex';
+    modal.style.alignItems = 'center';
+    modal.style.justifyContent = 'center';
+    modal.style.padding = '20px';
+    document.body.style.overflow = 'hidden';
+    if (typeof refreshIcons === 'function') refreshIcons();
+}
+
+function dlInterceptZipDownload(event) {
+    event.preventDefault();
+    const url = event.currentTarget.href;
+    if (!url) return;
+
+    fetch(url, { method: 'HEAD' })
+        .then(res => {
+            if (res.ok) {
+                window.location.href = url;
+            } else if (res.status === 404) {
+                dlShowPopup('ZIP package has been deleted or expired. Please rerun the download.');
+            } else {
+                dlShowPopup('ZIP download failed: HTTP ' + res.status);
+            }
+        })
+        .catch(err => {
+            dlShowPopup('ZIP download failed: ' + err.message);
+        });
 }
 
 // ── Session beacon cleanup on page close ─────────────────────────
