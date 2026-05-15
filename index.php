@@ -47,6 +47,7 @@ if (!in_array($page, $validPages)) {
      JAVASCRIPT  (modular — each file handles one concern)
      ════════════════════════════════════════════════════ -->
 <script src="assets/js/router.js"></script>
+<script src="assets/js/downloader.js"></script>
 <script src="assets/js/audit.js"></script>
 <script src="assets/js/dns.js"></script>
 <script src="assets/js/mx.js"></script>

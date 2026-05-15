@@ -28,6 +28,18 @@ switch ($action) {
     case 'download_sitemap':
         require __DIR__ . '/actions/download_sitemap.php';
         break;
+
+    // ── Website Asset Downloader ──────────────────────────────────
+    case 'download_website':
+        require __DIR__ . '/actions/download_website.php';
+        break;
+    case 'dl_zip':
+        require __DIR__ . '/actions/dl_zip.php';
+        break;
+    case 'dl_cleanup':
+        require __DIR__ . '/actions/dl_cleanup.php';
+        break;
+
     default:
         http_response_code(404);
         header('Content-Type: application/json');
