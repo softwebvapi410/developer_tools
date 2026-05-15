@@ -528,31 +528,6 @@ function dl_make_zip(string $srcDir, string $zipPath): bool {
 }
 
 // ── Expire marker ──────────────────────────────────────────────
-function dl_write_expire(string $path, int $secs = 3600): void {
-    file_put_contents($path . '.expire', (string)(time() + $secs));
-}
-
-function dl_cleanup_expired(string $base): void {
-    foreach (glob($base . '/*.expire') ?: [] as $f) {
-        $exp = (int)@file_get_contents($f);
-        if ($exp === 0 || time() < $exp) continue;
-        $target = substr($f, 0, -7);
-        if (is_dir($target)) {
-            $it = new RecursiveIteratorIterator(
-                new RecursiveDirectoryIterator($target, RecursiveDirectoryIterator::SKIP_DOTS),
-                RecursiveIteratorIterator::CHILD_FIRST
-            );
-            foreach ($it as $ff) {
-                $ff->isDir() ? @rmdir($ff->getRealPath()) : @unlink($ff->getRealPath());
-            }
-            @rmdir($target);
-        } elseif (is_file($target)) {
-            @unlink($target);
-        }
-        @unlink($f);
-    }
-}
-
 // ════════════════════════════════════════════════════════════════
 //  MAIN
 // ════════════════════════════════════════════════════════════════
@@ -570,7 +545,6 @@ if (!$url) {
 
 $baseWork  = __DIR__ . '/../../downloads';
 if (!is_dir($baseWork)) @mkdir($baseWork, 0755, true);
-dl_cleanup_expired($baseWork);
 
 $sessionId  = date('Ymd_His') . '_' . substr(md5($url . microtime()), 0, 6);
 $sessionDir = $baseWork . '/' . $sessionId;

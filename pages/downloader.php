@@ -97,7 +97,7 @@
                 <i data-lucide="check-circle-2" class="icon-xl" style="color:#34d399;flex-shrink:0;"></i>
                 <div>
                     <div class="heading text-lg font-bold text-white">Download Complete!</div>
-                    <div id="dlZipExpiry" class="text-sm" style="color:rgba(255,255,255,.6);">ZIP auto-deletes in 1 hour</div>
+                    <div id="dlZipExpiry" class="text-sm" style="color:rgba(255,255,255,.6);">ZIP auto-deletes in 5 minutes</div>
                 </div>
             </div>
             <a id="dlZipBtn" href="#" class="btn-primary" style="background:linear-gradient(135deg,#059669,#0e9f6e);box-shadow:0 4px 14px rgba(14,159,110,.35);text-decoration:none;white-space:nowrap;">

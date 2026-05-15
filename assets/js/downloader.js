@@ -103,7 +103,7 @@ function dlSetLive(state) {
 // ── Timer ───────────────────────────────────────────────────────
 function dlStartTimer() {
     clearInterval(_dlTimerInterval);
-    _dlTimerSecs = 3600;
+    _dlTimerSecs = 300;
     _dlTimerInterval = setInterval(() => {
         if (--_dlTimerSecs <= 0) {
             clearInterval(_dlTimerInterval);
@@ -113,7 +113,7 @@ function dlStartTimer() {
         const s = String(_dlTimerSecs % 60).padStart(2, '0');
         const bar  = document.getElementById('dlTimerBar');
         const exp  = document.getElementById('dlZipExpiry');
-        if (bar) bar.style.width = ((_dlTimerSecs / 3600) * 100) + '%';
+        if (bar) bar.style.width = ((_dlTimerSecs / 300) * 100) + '%';
         if (exp) exp.textContent = `ZIP auto-deletes in ${m}:${s}`;
     }, 1000);
 }

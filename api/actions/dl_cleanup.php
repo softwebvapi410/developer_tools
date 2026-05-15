@@ -9,21 +9,14 @@ $baseWork   = __DIR__ . '/../../downloads';
 $sessionDir = $baseWork . '/' . $sessionId;
 $zipPattern = $baseWork . '/dl_' . $sessionId . '.zip';
 
-// Delete session directory
+// Update session expiration to 5 minutes from now
 if (is_dir($sessionDir)) {
-    $it = new RecursiveIteratorIterator(
-        new RecursiveDirectoryIterator($sessionDir, RecursiveDirectoryIterator::SKIP_DOTS),
-        RecursiveIteratorIterator::CHILD_FIRST
-    );
-    foreach ($it as $f) {
-        $f->isDir() ? @rmdir($f->getRealPath()) : @unlink($f->getRealPath());
-    }
-    @rmdir($sessionDir);
+    file_put_contents($sessionDir . '.expire', (string)(time() + 300));
 }
-@unlink($sessionDir . '.expire');
 
-// Delete ZIP
-if (file_exists($zipPattern)) @unlink($zipPattern);
-@unlink($zipPattern . '.expire');
+// Update ZIP expiration to 5 minutes from now
+if (file_exists($zipPattern)) {
+    file_put_contents($zipPattern . '.expire', (string)(time() + 300));
+}
 
 exit;

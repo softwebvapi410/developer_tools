@@ -12,6 +12,9 @@ $action = $_GET['action'];
 
 require_once __DIR__ . '/helpers.php';
 
+// Run cleanup on every API request
+dl_cleanup_expired(__DIR__ . '/../downloads');
+
 switch ($action) {
     case 'crawl':
         require __DIR__ . '/actions/crawl.php';
