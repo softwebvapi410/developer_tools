@@ -5,21 +5,24 @@
 // ═══════════════════════════════════════
 
 const PAGE_META = {
-    audit:       { label: 'Analyze Site',         icon: 'search' },
-    dns:         { label: 'DNS Lookup',            icon: 'terminal' },
-    mx:          { label: 'Check MX / Email',      icon: 'mail-check' },
-    whois:       { label: 'WHOIS Lookup',          icon: 'id-card' },
-    browser:     { label: 'Browser & UA',          icon: 'monitor' },
-    ip:          { label: 'IP Address Info',       icon: 'wifi' },
-    downloader:  { label: 'Website Downloader',    icon: 'download' },
-    caseconvert: { label: 'Text Case Converter',   icon: 'case-sensitive' },
-    qr:          { label: 'QR Code Generator',     icon: 'qr-code' },
+    home:        { label: 'Home',                   icon: 'home' },
+    audit:       { label: 'Analyze Site',           icon: 'search' },
+    dns:         { label: 'DNS Lookup',              icon: 'terminal' },
+    mx:          { label: 'Check MX / Email',        icon: 'mail-check' },
+    whois:       { label: 'WHOIS Lookup',            icon: 'id-card' },
+    browser:     { label: 'Browser & UA',            icon: 'monitor' },
+    ip:          { label: 'IP Address Info',         icon: 'wifi' },
+    downloader:  { label: 'Website Downloader',      icon: 'download' },
+    caseconvert: { label: 'Text Case Converter',     icon: 'case-sensitive' },
+    qr:          { label: 'QR Code Generator',       icon: 'qr-code' },
     codeformat:  { label: 'Code Formatter',          icon: 'code-2' },
     numgen:      { label: 'Number Generator',        icon: 'hash' },
     colorgen:    { label: 'Colour Generator',        icon: 'palette' },
+    about:       { label: 'About',                  icon: 'info' },
+    privacy:     { label: 'Privacy Policy',         icon: 'shield-check' },
 };
 
-let currentPage = 'audit';
+let currentPage = 'home';
 
 function stripToDomain(val) {
     // Remove protocol, www optionally, trailing slashes, paths, query strings
@@ -66,7 +69,7 @@ function syncDomainInput(inputId) {
 }
 
 function navigateTo(page, pushState = true) {
-    if (!PAGE_META[page]) page = 'audit';
+    if (!PAGE_META[page]) page = 'home';
     currentPage = page;
 
     // Hide all sections, show target
@@ -152,7 +155,7 @@ window.addEventListener('popstate', (e) => {
 function getPageFromUrl() {
     const params = new URLSearchParams(window.location.search);
     const p = params.get('page');
-    return PAGE_META[p] ? p : 'audit';
+    return PAGE_META[p] ? p : 'home';
 }
 
 // ── Auto-init ──

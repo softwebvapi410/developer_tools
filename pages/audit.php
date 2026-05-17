@@ -6,7 +6,7 @@
         <header id="topSection" class="text-center mb-10">
             <div class="badge-pill mb-4">
                 <i data-lucide="zap" class="icon-sm"></i>
-                SEO Auditor Pro
+                DEV Toolz Pro
             </div>
             <h1 class="font-extrabold mb-3" style="font-size:var(--fs-4xl);color:var(--ink);letter-spacing:-.02em;line-height:1.1;">
                 Technical SEO Analyzer

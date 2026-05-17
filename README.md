@@ -1,4 +1,4 @@
-# SEO Auditor Pro — Refactored Structure
+# DEV Toolz Pro — Refactored Structure
 
 ## Overview
 
